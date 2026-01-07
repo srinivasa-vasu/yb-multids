@@ -35,9 +35,7 @@ public class DataSourceConfig {
     return new DataSourceProperties();
   }
 
-  @Bean
-  @ConfigurationProperties("spring.datasource.rw.hikari")
-  public HikariConfig rwHikariConfig(@Qualifier("rwDSProp") DataSourceProperties props) {
+  private HikariConfig getConfig(DataSourceProperties props){
     HikariConfig config = new HikariConfig();
     config.setJdbcUrl(props.getUrl());
     config.setUsername(props.getUsername());
@@ -47,14 +45,15 @@ public class DataSourceConfig {
   }
 
   @Bean
+  @ConfigurationProperties("spring.datasource.rw.hikari")
+  public HikariConfig rwHikariConfig(@Qualifier("rwDSProp") DataSourceProperties props) {
+    return getConfig(props);
+  }
+
+  @Bean
   @ConfigurationProperties("spring.datasource.ro.hikari")
   public HikariConfig roHikariConfig(@Qualifier("roDSProp") DataSourceProperties props) {
-    HikariConfig config = new HikariConfig();
-    config.setJdbcUrl(props.getUrl());
-    config.setUsername(props.getUsername());
-    config.setPassword(props.getPassword());
-    config.setDriverClassName(props.getDriverClassName());
-    return config;
+    return getConfig(props);
   }
 
   @Bean(name = "rwDataSource")
