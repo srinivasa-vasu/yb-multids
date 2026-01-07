@@ -1,6 +1,6 @@
 # Spring Boot Multi-Datasource with YugabyteDB
 
-This is a demo project that demonstrates how to configure multiple datasources (read-write and read-only) in a Spring Boot application with YugabyteDB.
+This is a sample project that demonstrates how to configure multiple datasources (read-write and read-only) in a Spring Boot application with YugabyteDB.
 
 ## Project Structure
 
