@@ -19,11 +19,11 @@ spring:
       password: yugabyte
       hikari:
         pool-name: rw-pool
-        minimum-idle: 3
-        maximum-pool-size: 3
+        minimum-idle: 2
+        maximum-pool-size: 2
         auto-commit: false
         keepalive-time: 120000
-        connection-init-sql: "prepare warmup as SELECT 1; execute warmup; commit;"
+#        connection-init-sql: "begin read only; prepare warmup as SELECT 1; execute warmup; commit;"
         connection-timeout: 15000
         data-source-properties:
           ApplicationName: multids-rw
@@ -38,11 +38,11 @@ spring:
       password: yugabyte
       hikari:
         pool-name: ro-pool
-        minimum-idle: 6
-        maximum-pool-size: 6
+        minimum-idle: 1
+        maximum-pool-size: 1
         auto-commit: false
         keepalive-time: 120000
-        connection-init-sql: "set default_transaction_read_only=on; set yb_read_from_followers=on; prepare warmup as SELECT 1; execute warmup; commit;"
+#        connection-init-sql: "set yb_read_from_followers=on; prepare warmup as SELECT 1; execute warmup; commit;"
         connection-timeout: 15000
         data-source-properties:
           ApplicationName: multids-ro
