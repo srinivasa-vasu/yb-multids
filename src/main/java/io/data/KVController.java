@@ -1,5 +1,6 @@
 package io.data;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,8 +37,13 @@ public class KVController {
   }
 
   @GetMapping
-  public Iterable<KeyValue> getAllKeys() {
+  public List<KeyValue> getAllKeys() {
     return kvService.getAllKeys();
+  }
+
+  @GetMapping("/fallback")
+  public List<KeyValue> getFallbackAllKeys() {
+    return kvService.getFallbackAllKeys();
   }
 
   @DeleteMapping("/{key}")

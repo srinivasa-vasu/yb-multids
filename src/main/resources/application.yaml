@@ -12,32 +12,32 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   datasource:
-    rw:
+    ds1:
       driver-class-name: com.yugabyte.Driver
-      url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1c
+      url: jdbc:yugabytedb://127.0.0.2:5433/db1?load-balance=true
       username: yugabyte
       password: yugabyte
       hikari:
-        pool-name: rw-pool
-        minimum-idle: 2
-        maximum-pool-size: 2
+        pool-name: ds1-pool
+        minimum-idle: 1
+        maximum-pool-size: 1
         auto-commit: false
         keepalive-time: 120000
 #        connection-init-sql: "begin read only; prepare warmup as SELECT 1; execute warmup; commit;"
         connection-timeout: 15000
         data-source-properties:
-          ApplicationName: multids-rw
+          ApplicationName: multids-ds1
           socketTimeout: 15
           yb-servers-refresh-interval: 180
           loginTimeout: 10
           connectTimeout: 5
-    ro:
+    ds2:
       driver-class-name: com.yugabyte.Driver
-      url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1b
+      url: jdbc:yugabytedb://127.0.0.2:5433/db2?load-balance=true
       username: yugabyte
       password: yugabyte
       hikari:
-        pool-name: ro-pool
+        pool-name: ds2-pool
         minimum-idle: 1
         maximum-pool-size: 1
         auto-commit: false
@@ -45,7 +45,7 @@ spring:
 #        connection-init-sql: "set yb_read_from_followers=on; prepare warmup as SELECT 1; execute warmup; commit;"
         connection-timeout: 15000
         data-source-properties:
-          ApplicationName: multids-ro
+          ApplicationName: multids-ds2
           socketTimeout: 15
           yb-servers-refresh-interval: 180
           loginTimeout: 10

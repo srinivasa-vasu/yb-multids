@@ -7,4 +7,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ReadOnly {}
+public @interface MultiDSAggregate {
+  // false = aggregate all, true = sequential fallback
+  boolean fallback() default false;
+}

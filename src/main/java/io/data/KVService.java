@@ -1,5 +1,6 @@
 package io.data;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +24,15 @@ public class KVService {
     return repository.findById(id);
   }
 
-  @Transactional(readOnly = true)
-  @ReadOnly
-  public Iterable<KeyValue> getAllKeys() {
+  @Transactional
+  @MultiDSAggregate
+  public List<KeyValue> getAllKeys() {
+    return repository.findAll();
+  }
+
+  @Transactional
+  @MultiDSAggregate(fallback = true)
+  public List<KeyValue> getFallbackAllKeys() {
     return repository.findAll();
   }
 
