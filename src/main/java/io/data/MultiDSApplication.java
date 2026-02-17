@@ -6,8 +6,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.RetryPolicy;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.policy.CompositeRetryPolicy;
+import org.springframework.retry.policy.TimeoutRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
 @SpringBootApplication(proxyBeanMethods = false)
@@ -25,6 +28,8 @@ public class MultiDSApplication {
     private int maxInterval;
     private int initialInterval;
     private int multiplier;
+    private int circuitOpenTimeout;
+    private int maxAttempts;
   }
 
   @Bean
@@ -34,7 +39,11 @@ public class MultiDSApplication {
     backOffPolicy.setMaxInterval(config.getMaxInterval());
     backOffPolicy.setInitialInterval(config.getInitialInterval());
     backOffPolicy.setMultiplier(config.getMultiplier());
-    retryTemplate.setRetryPolicy(retryPolicy);
+    // short circuit retry attempts on lengthy network timeouts
+    TimeoutRetryPolicy timeoutRetryPolicy = new TimeoutRetryPolicy(config.getCircuitOpenTimeout());
+    CompositeRetryPolicy compositeRetryPolicy = new CompositeRetryPolicy();
+    compositeRetryPolicy.setPolicies(new RetryPolicy[] {timeoutRetryPolicy, retryPolicy});
+    retryTemplate.setRetryPolicy(compositeRetryPolicy);
     retryTemplate.setBackOffPolicy(backOffPolicy);
     return retryTemplate;
   }

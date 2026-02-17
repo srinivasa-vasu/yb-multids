@@ -4,15 +4,17 @@ import io.data.DataSourceConfig.AspectRoutingContext;
 import io.data.DataSourceConfig.DataSourceType;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Component;
 public class MultiDSAggregateAspect {
   private final Executor executor;
   private final RetryTemplate retryTemplate;
+  private static final Logger log = org.slf4j.LoggerFactory.getLogger(MultiDSAggregateAspect.class);
 
   public MultiDSAggregateAspect(
       @Qualifier("multiDSExecutorPool") Executor executor, RetryTemplate retryTemplate) {
@@ -64,10 +67,15 @@ public class MultiDSAggregateAspect {
 
   private Object executeParallelAggregation(
       ProceedingJoinPoint joinPoint, DataSourceType[] sources) {
-    return Arrays.stream(sources)
-        .map(
-            source ->
-                CompletableFuture.supplyAsync(() -> executeInContext(joinPoint, source), executor))
+    List<CompletableFuture<Object>> futures =
+        Arrays.stream(sources)
+            .map(
+                source ->
+                    CompletableFuture.supplyAsync(
+                        () -> executeInContext(joinPoint, source), executor))
+            .toList();
+
+    return futures.stream()
         .map(CompletableFuture::join)
         .filter(Objects::nonNull)
         .flatMap(
@@ -75,13 +83,21 @@ public class MultiDSAggregateAspect {
                 result instanceof Collection
                     ? ((Collection<?>) result).stream()
                     : Stream.of(result))
-        .collect(Collectors.toList());
+        .toList();
   }
 
   private Object executeInContext(ProceedingJoinPoint joinPoint, DataSourceType source) {
     try {
       AspectRoutingContext.preferDS(source);
-      return retryTemplate.execute(e -> joinPoint.proceed());
+      return retryTemplate.execute(
+          _ -> joinPoint.proceed(),
+          recovery -> {
+            log.error(
+                "All retry attempts are either exhausted: {} or the circuit is open",
+                recovery.getRetryCount(),
+                recovery.getLastThrowable());
+            return Optional.empty();
+          });
     } catch (Throwable ex) {
       throw new RuntimeException("Execution failed for: " + source, ex);
     } finally {

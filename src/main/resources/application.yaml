@@ -7,7 +7,9 @@ spring:
   retry:
     initial-interval: 200
     max-interval: 5000
-    multiplier: 3
+    multiplier: 2
+    max-attempts: 3
+    circuit-open-timeout: 5000
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
