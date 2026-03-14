@@ -35,7 +35,7 @@ public class DataSourceConfig {
     return new DataSourceProperties();
   }
 
-  private HikariConfig getConfig(DataSourceProperties props){
+  private HikariConfig getConfig(DataSourceProperties props) {
     HikariConfig config = new HikariConfig();
     config.setJdbcUrl(props.getUrl());
     config.setUsername(props.getUsername());
