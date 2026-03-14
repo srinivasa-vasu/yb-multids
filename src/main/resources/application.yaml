@@ -1,6 +1,6 @@
 spring:
   application:
-    name: multids
+    name: yb-spring-boot-app
   threads:
     virtual:
       enabled: true
@@ -10,46 +10,27 @@ spring:
     multiplier: 3
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
 
   datasource:
-    rw:
-      driver-class-name: com.yugabyte.Driver
-      url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1c
-      username: yugabyte
-      password: yugabyte
-      hikari:
-        pool-name: rw-pool
-        minimum-idle: 2
-        maximum-pool-size: 2
-        auto-commit: false
-        keepalive-time: 120000
-#        connection-init-sql: "begin read only; prepare warmup as SELECT 1; execute warmup; commit;"
-        connection-timeout: 15000
-        data-source-properties:
-          ApplicationName: multids-rw
-          socketTimeout: 15
-          yb-servers-refresh-interval: 180
-          loginTimeout: 10
-          connectTimeout: 5
-    ro:
-      driver-class-name: com.yugabyte.Driver
-      url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1b
-      username: yugabyte
-      password: yugabyte
-      hikari:
-        pool-name: ro-pool
-        minimum-idle: 1
-        maximum-pool-size: 1
-        auto-commit: false
-        keepalive-time: 120000
-#        connection-init-sql: "set yb_read_from_followers=on; prepare warmup as SELECT 1; execute warmup; commit;"
-        connection-timeout: 15000
-        data-source-properties:
-          ApplicationName: multids-ro
-          socketTimeout: 15
-          yb-servers-refresh-interval: 180
-          loginTimeout: 10
-          connectTimeout: 5
+    driver-class-name: com.yugabyte.Driver
+    url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1c
+    username: yugabyte
+    password: yugabyte
+    hikari:
+      pool-name: yb-pool
+      minimum-idle: 2
+      maximum-pool-size: 2
+      auto-commit: false
+      keepalive-time: 120000
+      connection-init-sql: "begin read only; prepare warmup as SELECT 1; execute warmup; commit;"
+      connection-timeout: 15000
+      data-source-properties:
+        ApplicationName: yb-spring-boot-app
+        socketTimeout: 15
+        yb-servers-refresh-interval: 180
+        loginTimeout: 10
+        connectTimeout: 5
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
