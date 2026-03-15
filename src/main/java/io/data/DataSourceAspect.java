@@ -1,6 +1,5 @@
 package io.data;
 
-import java.util.Optional;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -8,8 +7,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Aspect
 @Component
@@ -30,14 +30,8 @@ public class DataSourceAspect {
   @Around(
       "@annotation(org.springframework.stereotype.Service) || @within(org.springframework.stereotype.Service)")
   public Object wrapper(ProceedingJoinPoint pjp) throws Throwable {
-    return retryTemplate.execute(
-        _ -> pjp.proceed(),
-        recovery -> {
-          log.error(
-              "All retry attempts are either exhausted: {} or the circuit is open",
-              recovery.getRetryCount(),
-              recovery.getLastThrowable());
-          return Optional.empty();
-        });
+    if (log.isDebugEnabled())
+      log.debug("Is Txn active?: {}", TransactionSynchronizationManager.isSynchronizationActive());
+    return retryTemplate.execute(pjp::proceed);
   }
 }

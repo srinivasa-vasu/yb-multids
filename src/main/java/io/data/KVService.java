@@ -24,7 +24,6 @@ public class KVService {
   }
 
   @Transactional(readOnly = true)
-  @ReadOnly
   public Iterable<KeyValue> getAllKeys() {
     return repository.findAll();
   }

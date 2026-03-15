@@ -8,6 +8,8 @@ spring:
     initial-interval: 200
     max-interval: 5000
     multiplier: 3
+    max-attempts: 3
+    jitter: 100
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
