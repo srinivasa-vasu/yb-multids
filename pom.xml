@@ -11,7 +11,7 @@
 	<groupId>io.data</groupId>
 	<artifactId>multids</artifactId>
 	<version>1.0.0</version>
-	<name>boot-reactive-app</name>
+	<name>yb-boot-reactive-app</name>
 	<description>Demo project for Spring Boot Reactive Config</description>
 	<url/>
 	<licenses>
@@ -68,8 +68,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-yugabytedb</artifactId>
-			<version>10.24.0</version>
+			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<!-- Flyway needs a JDBC driver even in an R2DBC app for migrations -->
 		<dependency>

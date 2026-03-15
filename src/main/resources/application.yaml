@@ -7,9 +7,9 @@ spring:
   retry:
     initial-interval: 200
     max-interval: 5000
-    multiplier: 3
+    multiplier: 2
     max-attempts: 3
-    jitter: 100
+    jitter: 0.2
 
   r2dbc:
     name: yb-r2dbc-app
@@ -23,11 +23,8 @@ spring:
       validation-query: SELECT 1
       max-acquire-time: 15s
     properties:
-      ApplicationName: yb-r2dbc-app
-      socketTimeout: 15
-      yb-servers-refresh-interval: 180
-      loginTimeout: 10
-      connectTimeout: 5
+      applicationName: yb-r2dbc-app
+      tcpKeepAlive: true
 
 logging:
   level:
