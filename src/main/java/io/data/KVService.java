@@ -1,6 +1,8 @@
 package io.data;
 
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,23 +16,23 @@ public class KVService {
   }
 
   @Transactional
-  public KeyValue save(KeyValue resource) {
+  public Mono<KeyValue> save(KeyValue resource) {
     return repository.save(resource);
   }
 
   @Transactional(readOnly = true)
-  public Optional<KeyValue> getKey(String id) {
+  public Mono<KeyValue> getKey(String id) {
     return repository.findById(id);
   }
 
   @Transactional(readOnly = true)
-  @ReadOnly
-  public Iterable<KeyValue> getAllKeys() {
+  public Flux<KeyValue> getAllKeys() {
+    repository.findAll();
     return repository.findAll();
   }
 
   @Transactional
-  public void deleteKey(String key) {
-    repository.deleteById(key);
+  public Mono<Void> deleteKey(String key) {
+    return repository.deleteById(key);
   }
 }

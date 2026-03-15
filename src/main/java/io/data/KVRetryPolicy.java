@@ -1,6 +1,6 @@
 package io.data;
 
-import jakarta.annotation.PostConstruct;
+import io.data.YBApplication.RetryPropertyConfig;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
 import java.sql.SQLTransientConnectionException;
@@ -8,16 +8,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import org.hibernate.TransactionException;
+import org.jspecify.annotations.NonNull;
+import org.springframework.core.retry.RetryPolicy;
 import org.springframework.dao.TransientDataAccessException;
-import org.springframework.retry.RetryPolicy;
-import org.springframework.retry.policy.ExceptionClassifierRetryPolicy;
-import org.springframework.retry.policy.NeverRetryPolicy;
-import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.stereotype.Component;
+import org.springframework.util.backoff.BackOff;
+import org.springframework.util.backoff.ExponentialBackOff;
 
 @Component
-public class KVRetryPolicy extends ExceptionClassifierRetryPolicy {
+public class KVRetryPolicy implements RetryPolicy {
+
+  @lombok.Getter
+  private final BackOff backOff;
+
+  public KVRetryPolicy(RetryPropertyConfig config) {
+    ExponentialBackOff backOff = new ExponentialBackOff();
+    backOff.setMaxInterval(config.getMaxInterval());
+    backOff.setInitialInterval(config.getInitialInterval());
+    backOff.setMultiplier(config.getMultiplier());
+    backOff.setMaxAttempts(config.getMaxAttempts());
+    backOff.setJitter(config.getJitter());
+    this.backOff = backOff;
+  }
 
   // 40001 - optimistic concurrency or serialization_failure
   // 40P01 - deadlock
@@ -32,10 +44,6 @@ public class KVRetryPolicy extends ExceptionClassifierRetryPolicy {
   // XX000 shouldn't be re-tried. Retry it only when the state and msg matches
   private final Map<String, List<String>> specialCodes =
       Map.of("XX000", List.of("schema version mismatch", "duplicate request"));
-
-  private final RetryPolicy sp = new SimpleRetryPolicy(5);
-
-  private final RetryPolicy np = new NeverRetryPolicy();
 
   private final Predicate<SQLException> sqlStatePredicate =
       exception -> {
@@ -75,23 +83,19 @@ public class KVRetryPolicy extends ExceptionClassifierRetryPolicy {
       exception ->
           (exception instanceof SQLRecoverableException
               || exception instanceof SQLTransientConnectionException
-              || exception instanceof TransientDataAccessException
-              || exception instanceof TransactionException);
+              || exception instanceof TransientDataAccessException);
 
-  @PostConstruct
-  public void init() {
-    Throwable parent = null;
-    this.setExceptionClassifier(
-        cause -> {
-          do {
-            if (exceptionPredicate.test(cause)
-                || (cause instanceof SQLException exception
-                    && (sqlStatePredicate.or(sqlMsgPredicate).test(exception)))) {
-              return sp;
-            }
-            cause = cause.getCause();
-          } while (cause != null);
-          return np;
-        });
+  @Override
+  public boolean shouldRetry(@NonNull Throwable cause) {
+    do {
+      if (exceptionPredicate.test(cause)
+          || (cause instanceof SQLException exception
+              && (sqlStatePredicate.or(sqlMsgPredicate).test(exception)))) {
+        return true;
+      }
+      cause = cause.getCause();
+    } while (cause != null);
+    return false;
   }
+
 }

@@ -6,16 +6,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.retry.annotation.EnableRetry;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.core.retry.RetryTemplate;
 
 @SpringBootApplication(proxyBeanMethods = false)
-@EnableRetry
-public class MultiDSApplication {
+public class YBApplication {
 
   static void main(String[] args) {
-    SpringApplication.run(MultiDSApplication.class, args);
+    SpringApplication.run(YBApplication.class, args);
   }
 
   @ConfigurationProperties(prefix = "spring.retry")
@@ -25,17 +23,15 @@ public class MultiDSApplication {
     private int maxInterval;
     private int initialInterval;
     private int multiplier;
+    private int maxAttempts;
+    private long jitter;
   }
 
   @Bean
-  public RetryTemplate retryTemplate(KVRetryPolicy retryPolicy, RetryPropertyConfig config) {
+  public RetryTemplate retryTemplate(KVRetryPolicy retryPolicy) {
+//    RetryPolicy.builder().predicate()
     RetryTemplate retryTemplate = new RetryTemplate();
-    ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-    backOffPolicy.setMaxInterval(config.getMaxInterval());
-    backOffPolicy.setInitialInterval(config.getInitialInterval());
-    backOffPolicy.setMultiplier(config.getMultiplier());
     retryTemplate.setRetryPolicy(retryPolicy);
-    retryTemplate.setBackOffPolicy(backOffPolicy);
     return retryTemplate;
   }
 }

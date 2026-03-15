@@ -8,29 +8,27 @@ spring:
     initial-interval: 200
     max-interval: 5000
     multiplier: 3
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false
+    max-attempts: 3
+    jitter: 100
 
-  datasource:
-    driver-class-name: com.yugabyte.Driver
-    url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1c
+  r2dbc:
+    name: yb-r2dbc-app
+    url: r2dbc:postgresql://127.0.0.2:5433/yugabyte?loadBalance=true&topologyKeys=ybcloud.ap-south-1.ap-south-1c
     username: yugabyte
     password: yugabyte
-    hikari:
-      pool-name: yb-pool
-      minimum-idle: 2
-      maximum-pool-size: 2
-      auto-commit: false
-      keepalive-time: 120000
-      connection-init-sql: "begin read only; prepare warmup as SELECT 1; execute warmup; commit;"
-      connection-timeout: 15000
-      data-source-properties:
-        ApplicationName: yb-spring-boot-app
-        socketTimeout: 15
-        yb-servers-refresh-interval: 180
-        loginTimeout: 10
-        connectTimeout: 5
+    pool:
+      initial-size: 3
+      max-size: 3
+      max-idle-time: 2m
+      validation-query: SELECT 1
+      max-acquire-time: 15s
+    properties:
+      ApplicationName: yb-r2dbc-app
+      socketTimeout: 15
+      yb-servers-refresh-interval: 180
+      loginTimeout: 10
+      connectTimeout: 5
+
 logging:
   level:
     com.zaxxer.hikari.HikariConfig: DEBUG
