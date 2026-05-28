@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PGPASSWORD="${YSQL_PASSWORD:-yugabyte}"
+
+exec /opt/yugabyte-client/bin/ysqlsh \
+  --host="${YSQL_HOST:-yb-primary}" \
+  --port="${YSQL_PORT:-5433}" \
+  --username="${YSQL_USER:-yugabyte}" \
+  --dbname="${YSQL_DB:-yugabyte}" \
+  "$@"

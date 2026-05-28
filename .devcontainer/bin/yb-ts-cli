@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+tserver_address="${YB_TSERVER_ADDRESS:-yb-primary:9100}"
+
+exec /opt/yugabyte-db/bin/yb-ts-cli \
+  --server_address "$tserver_address" \
+  "$@"

@@ -1,0 +1,72 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/bash -c "/workspaces/yb-multids/.devcontainer/start-app.sh && tail -f /dev/null"
+    init: true
+    depends_on:
+      - yb-primary
+      - yb-rr
+    volumes:
+      - ..:/workspaces/yb-multids:cached
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_RW_URL: "jdbc:yugabytedb://yb-primary:5433/yugabyte?load-balance=true"
+      SPRING_DATASOURCE_RO_URL: "jdbc:yugabytedb://yb-rr:5433/yugabyte?load-balance=true"
+  yb-primary:
+    image: yugabytedb/yugabyte:2025.2.3.0-b149
+    hostname: yb-primary
+    command:
+      - bash
+      - -lc
+      - >
+        bin/yugabyted start
+        --advertise_address=$(hostname -i)
+        --base_dir=/tmp/yb_data
+        --cloud_location=local.dev.primary
+        --background=false
+    mem_limit: 2g
+    cpus: 2
+    expose:
+      - "5433"
+      - "7000"
+      - "9000"
+      - "15433"
+      - "7100"
+      - "9100"
+      - "9042"
+  yb-rr:
+    image: yugabytedb/yugabyte:2025.2.3.0-b149
+    hostname: yb-rr
+    command:
+      - bash
+      - -lc
+      - |
+        until (echo > /dev/tcp/yb-primary/5433) >/dev/null 2>&1; do sleep 2; done;
+        bin/yugabyted start \
+          --advertise_address=$(hostname -i) \
+          --join=yb-primary \
+          --base_dir=/tmp/yb_rr_data \
+          --cloud_location=local.dev.rr \
+          --read_replica \
+          --background=true;
+        until (echo > /dev/tcp/127.0.0.1/5433) >/dev/null 2>&1; do sleep 2; done;
+        bin/yugabyted configure_read_replica new \
+          --base_dir=/tmp/yb_rr_data \
+          --rf=1 \
+          --data_placement_constraint=local.dev.rr:1;
+        tail -f /dev/null
+    mem_limit: 2g
+    cpus: 2
+    depends_on:
+      - yb-primary
+    expose:
+      - "5433"
+      - "7000"
+      - "9000"
+      - "15433"
+      - "7100"
+      - "9100"
+      - "9042"

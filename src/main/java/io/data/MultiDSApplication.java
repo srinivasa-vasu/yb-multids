@@ -14,7 +14,7 @@ import org.springframework.retry.support.RetryTemplate;
 @EnableRetry
 public class MultiDSApplication {
 
-  static void main(String[] args) {
+  public static void main(String[] args) {
     SpringApplication.run(MultiDSApplication.class, args);
   }
 

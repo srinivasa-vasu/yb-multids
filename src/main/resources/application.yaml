@@ -14,7 +14,7 @@ spring:
   datasource:
     rw:
       driver-class-name: com.yugabyte.Driver
-      url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1c
+      url: ${SPRING_DATASOURCE_RW_URL:jdbc:yugabytedb://127.0.0.1:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1c}
       username: yugabyte
       password: yugabyte
       hikari:
@@ -33,7 +33,7 @@ spring:
           connectTimeout: 5
     ro:
       driver-class-name: com.yugabyte.Driver
-      url: jdbc:yugabytedb://127.0.0.2:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1b
+      url: ${SPRING_DATASOURCE_RO_URL:jdbc:yugabytedb://127.0.0.1:5433/yugabyte?load-balance=true&topology-keys=ybcloud.ap-south-1.ap-south-1b}
       username: yugabyte
       password: yugabyte
       hikari:
@@ -57,4 +57,3 @@ logging:
     com.yugabyte.Driver: TRACE
 #    org.springframework.jdbc.datasource: DEBUG
 #    org.springframework.transaction: TRACE
-

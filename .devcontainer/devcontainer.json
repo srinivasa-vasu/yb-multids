@@ -1,0 +1,62 @@
+{
+  "name": "multids",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "runServices": ["yb-primary", "yb-rr"],
+  "workspaceFolder": "/workspaces/yb-multids",
+  "remoteUser": "vscode",
+  "forwardPorts": [
+    8080,
+    "yb-primary:15433",
+    "yb-primary:7000",
+    "yb-primary:9000",
+    "yb-primary:5433",
+    "yb-primary:7100",
+    "yb-primary:9100"
+  ],
+  "portsAttributes": {
+    "8080": {
+      "label": "Spring Boot app",
+      "onAutoForward": "notify"
+    },
+    "15433": {
+      "label": "YugabyteDB UI",
+      "onAutoForward": "notify"
+    },
+    "7000": {
+      "label": "YugabyteDB Master UI",
+      "onAutoForward": "notify"
+    },
+    "9000": {
+      "label": "YugabyteDB TServer UI",
+      "onAutoForward": "notify"
+    },
+    "5433": {
+      "label": "YugabyteDB SQL",
+      "onAutoForward": "notify"
+    },
+    "7100": {
+      "label": "YugabyteDB Master RPC",
+      "onAutoForward": "silent"
+    },
+    "9100": {
+      "label": "YugabyteDB TServer RPC",
+      "onAutoForward": "silent"
+    }
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-spring-boot",
+        "redhat.vscode-xml"
+      ]
+    }
+  },
+  "postCreateCommand": "mvn -q -DskipTests compile",
+  "postStartCommand": ".devcontainer/start-app.sh"
+}

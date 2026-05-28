@@ -27,7 +27,47 @@ The project has the following structure:
 
 - Java 25 or higher
 - Maven 3.6.3 or higher
-- YugabyteDB installed and running.
+- YugabyteDB installed and running, unless you use the Codespaces or devcontainer stack described below.
+
+## Dev Containers, Codespaces, and DevPod
+
+This repository now includes a dev container definition in [`.devcontainer/devcontainer.json`](./.devcontainer/devcontainer.json) so you can open it in:
+
+- GitHub Codespaces
+- VS Code Dev Containers
+- DevPod via [`./devpod.sh`](./devpod.sh)
+
+The app container is built from [`.devcontainer/Dockerfile`](./.devcontainer/Dockerfile), which uses a lightweight Eclipse Temurin Java 25 base with Maven plus YugabyteDB client tools. `ysqlsh` comes from the `yugabyte-client-2025.2.3.0-b149-linux-x86_64.tar.gz` release tarball; `yb-admin` and `yb-ts-cli` come from the matching `yugabytedb/yugabyte:2025.2.3.0-b149` image because they are not included in the client tarball. The stack also starts one YugabyteDB universe with a one-node primary cluster and a one-node read replica cluster, then launches the Spring Boot app after both YSQL endpoints are reachable. The app is exposed on port `8080`; primary YugabyteDB ports are forwarded for inspection, while read replica ports stay internal to the compose network.
+
+Use at least a 4-core Codespace for the full stack. Each bundled YugabyteDB node is capped for development use, with the YB-Master limited to 512 MiB and YB-TServer limited to 1 GiB.
+
+The Spring Boot app is started by [`.devcontainer/start-app.sh`](./.devcontainer/start-app.sh). Startup logs are written to `/tmp/multids.log` inside the app container.
+
+The bundled YugabyteDB service uses an ephemeral data directory under `/tmp/yb_data` inside the database container. Rebuilding the Codespace recreates the sample database from the Flyway migrations.
+
+Open a YSQL shell to the primary node from the app container terminal with:
+
+```bash
+ysqlsh
+```
+
+VS Code also opens this shell automatically on folder open using [`.vscode/tasks.json`](./.vscode/tasks.json). If automatic tasks are disabled in your client, run the `Open YSQL Shell` task manually.
+
+The helper defaults to username/password/database `yugabyte`.
+
+YugabyteDB admin tooling is also available:
+
+```bash
+yb-admin list_all_masters
+yb-ts-cli list_tablets
+```
+
+`yb-ts-cli` defaults to `yb-primary:9100`.
+
+The datasource URLs can still be overridden with environment variables if you want to point at another cluster:
+
+- `SPRING_DATASOURCE_RW_URL`
+- `SPRING_DATASOURCE_RO_URL`
 
 ## How to Build and Run
 
@@ -35,12 +75,12 @@ The project has the following structure:
 
     ```bash
     git clone https://github.com/srinivasa-vasu/yb-multids.git
-    cd multids
+    cd yb-multids
     ```
 
-2.  **Update the `application.yaml` file:**
+2.  **Configure the database:**
 
-    Update the `spring.datasource.rw.url` and `spring.datasource.ro.url` properties in the `src/main/resources/application.yaml` file with the correct database connection details.
+    The default Codespaces/devcontainer stack already points the application at the bundled YugabyteDB service. Set `SPRING_DATASOURCE_RW_URL` and `SPRING_DATASOURCE_RO_URL` only if you want to target a different database.
 
 3.  **Build the project:**
 
@@ -99,11 +139,10 @@ spring:
       password: yugabyte
       hikari:
         pool-name: rw-pool
-        minimum-idle: 3
-        maximum-pool-size: 3
+        minimum-idle: 2
+        maximum-pool-size: 2
         auto-commit: false
         keepalive-time: 120000
-        connection-init-sql: "prepare warmup as SELECT 1; execute warmup; commit;"
         connection-timeout: 15000
         data-source-properties:
           ApplicationName: multids-rw
@@ -125,11 +164,10 @@ spring:
       password: yugabyte
       hikari:
         pool-name: ro-pool
-        minimum-idle: 6
-        maximum-pool-size: 6
+        minimum-idle: 1
+        maximum-pool-size: 1
         auto-commit: false
         keepalive-time: 120000
-        connection-init-sql: "set default_transaction_read_only=on; set yb_read_from_followers=on; prepare warmup as SELECT 1; execute warmup; commit;"
         connection-timeout: 15000
         data-source-properties:
           ApplicationName: multids-ro

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+master_addresses="${YB_MASTER_ADDRESSES:-yb-primary:7100}"
+
+exec /opt/yugabyte-db/bin/yb-admin \
+  --master_addresses "$master_addresses" \
+  "$@"
